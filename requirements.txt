@@ -1,0 +1,23 @@
+# Dépendances du projet RAG Enterprise
+# =====================================
+# fastapi      → framework web pour exposer notre RAG via une API REST
+# uvicorn      → serveur qui fait tourner FastAPI
+# langchain    → bibliothèque qui orchestre tout le pipeline RAG
+# langchain-openai → connecteurs OpenAI (embeddings + chat)
+# langchain-community → loaders de documents (PDF, TXT...)
+# chromadb     → base de données vectorielle (stocke les embeddings)
+# pypdf        → lit les fichiers PDF
+# python-dotenv → charge la clé API depuis un fichier .env
+# python-multipart → permet d'uploader des fichiers via l'API
+
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-chroma>=0.2.0
+chromadb>=0.5.0
+pypdf>=5.0.0
+python-dotenv>=1.0.0
+python-multipart>=0.0.12
