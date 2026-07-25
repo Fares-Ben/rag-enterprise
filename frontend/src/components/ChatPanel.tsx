@@ -17,6 +17,7 @@ import {
   type Source,
 } from "@/lib/api";
 import { site } from "@/lib/site";
+import { SampleDocPreview } from "@/components/SampleDocPreview";
 
 type Message = {
   id: string;
@@ -79,15 +80,19 @@ export function ChatPanel() {
   const [uploading, setUploading] = useState(false);
   const [apiOnline, setApiOnline] = useState(true);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkHealth().then(setApiOnline);
   }, []);
 
+  // Scroll uniquement DANS la zone messages — pas toute la page
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages, loading]);
 
   const handleUpload = useCallback(async (file: File) => {
@@ -161,6 +166,10 @@ export function ChatPanel() {
     [loading],
   );
 
+  const onSuggestionClick = (question: string) => {
+    handleAsk(question);
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
       <aside className="space-y-4">
@@ -198,11 +207,13 @@ export function ChatPanel() {
           )}
         </div>
 
+        <SampleDocPreview />
+
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs leading-relaxed text-muted">
           <p className="font-semibold text-emerald-400">Doc de démo pré-chargé</p>
           <p className="mt-1">
-            Politique RH fictive (TechVision SAS) — télétravail, congés, sécurité.
-            Testez sans upload.
+            Politique RH fictive (TechVision SAS). Testez les questions rapides
+            ci-dessous dans le chat.
           </p>
         </div>
       </aside>
@@ -215,7 +226,29 @@ export function ChatPanel() {
           </p>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Suggestions en haut du chat — toujours visibles */}
+        <div className="flex flex-wrap gap-2 border-b border-border bg-surface/40 px-4 py-3">
+          <span className="w-full text-xs text-muted">Questions rapides :</span>
+          {site.suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onSuggestionClick(s);
+              }}
+              disabled={loading}
+              className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 space-y-4 overflow-y-auto p-4"
+        >
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -257,46 +290,30 @@ export function ChatPanel() {
               </div>
             </div>
           )}
-          <div ref={bottomRef} />
         </div>
 
-        <div className="border-t border-border px-4 py-3">
-          <div className="mb-3 flex flex-wrap gap-2">
-            {site.suggestions.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => handleAsk(s)}
-                disabled={loading}
-                className="rounded-full border border-border px-3 py-1 text-xs text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleAsk(input);
-            }}
+        <form
+          className="flex gap-2 border-t border-border px-4 py-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAsk(input);
+          }}
+        >
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ex : Quelle est la politique de télétravail ?"
+            disabled={loading}
+            className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-accent disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ex : Quelle est la politique de télétravail ?"
-              disabled={loading}
-              className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none focus:border-accent disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        </div>
+            <Send size={18} />
+          </button>
+        </form>
       </div>
     </div>
   );
